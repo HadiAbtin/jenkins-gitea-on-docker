@@ -1,0 +1,75 @@
+version: "3"
+
+services:
+  jenkins:
+    build: .
+    restart: unless-stopped
+    environment:
+      - "DOCKER_HOST=tcp://docker:2376"
+      - "DOCKER_TLS_VERIFY=1"
+      - "TZ=Asia/Tehran"
+      - "JAVA_OPTS=-Duser.timezone=Asia/Tehran"
+    volumes:
+      - "jenkins_data:/var/jenkins_home"
+      - "docker_certs_client:/var/jenkins_home/.docker"
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    labels:
+      - "app.name=jenkins"
+      - "app.project=jenkins"
+
+  registry:
+    image: registry:2
+    restart: unless-stopped
+    environment:
+      - "REGISTRY_FIELDS_ENVIRONMENT=production"
+      - "REGISTRY_HTTP_ADDR=0.0.0.0:1443"
+      - "REGISTRY_HTTP_TLS_CERTIFICATE=/certs/registry.crt"
+      - "REGISTRY_HTTP_TLS_KEY=/certs/registry.key"
+    volumes:
+      - "registry_data:/var/lib/registry"
+      - "./certs:/certs"
+    ports:
+      - "1443:443"
+    labels:
+      - "app.name=registry"
+      - "app.project=jenkins"
+
+  docker:
+    image: docker:dind
+    restart: unless-stopped
+    privileged: true
+    command: ["--insecure-registry", "$JENKINS_DOCKER_REGISTRY_IP"]
+    volumes:
+      - "docker_data:/var/lib/docker"
+      - "docker_certs:/certs"
+      - "docker_certs_client:/certs/client"
+      - "jenkins_data:/var/jenkins_home"
+    expose:
+      - "2376"
+    labels:
+      - "app.name=docker"
+      - "app.project=jenkins"
+
+  gitea:
+    image: gitea/gitea:latest
+    restart: unless-stopped
+    environment:
+      - "TZ=Asia/Tehran"
+    volumes:
+      - "gitea_data:/data"
+    ports:
+      - "3000:3000"
+      - "2222:22"
+    labels:
+      - "app.name=gitea"
+      - "app.project=jenkins"
+
+volumes:
+  jenkins_data:
+  registry_data:
+  docker_data:
+  docker_certs:
+  docker_certs_client:
+  gitea_data:
