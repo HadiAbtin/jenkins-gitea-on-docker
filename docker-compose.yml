@@ -24,14 +24,14 @@ services:
     restart: unless-stopped
     environment:
       - "REGISTRY_FIELDS_ENVIRONMENT=production"
-      - "REGISTRY_HTTP_ADDR=0.0.0.0:1443"
+      - "REGISTRY_HTTP_ADDR=0.0.0.0:443"
       - "REGISTRY_HTTP_TLS_CERTIFICATE=/certs/registry.crt"
       - "REGISTRY_HTTP_TLS_KEY=/certs/registry.key"
     volumes:
       - "registry_data:/var/lib/registry"
       - "./certs:/certs"
     ports:
-      - "1443:443"
+      - "443:443"
     labels:
       - "app.name=registry"
       - "app.project=jenkins"
